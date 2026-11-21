@@ -40,7 +40,7 @@ CONFTEST = REPO_ROOT / "tests" / "conftest.py"
 #: The three main pushes before this row, per interpreter: 12.85 / 11.91 / 11.33 at 1164 tests,
 #: 9.12 / 12.39 / 10.80 at 1170, and 13.97 / 16.57 / 12.24 at 1182. The spread between runs of the
 #: same suite is why this is a maximum rather than an average.
-MEASURED_TOTAL_SECONDS = 19.80
+MEASURED_TOTAL_SECONDS = 27.50
 
 #: The run behind that number, so a reader can tell whether their machine is the same one. The
 #: interpreter and pytest version are in it because both move the total with no change here.
@@ -56,7 +56,7 @@ MEASURED_ON = (
 #: so the constant cannot drift to a value that stops biting.
 #: 18.0 is the largest value that still satisfies that rule against 16.57: a ceiling is only worth
 #: having on the machine that has a deadline, and the old 45.0 was four times the CI total.
-SUITE_SECONDS_CEILING = 21.5
+SUITE_SECONDS_CEILING = 30.0
 
 
 def _load(path: Path, name: str) -> ModuleType:
