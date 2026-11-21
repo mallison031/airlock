@@ -44,6 +44,23 @@ line_cap = 500
 #: Anything that makes a closed pipe look like a crash instead of a reader that stopped.
 CRASH_WORDS = ("internal error", "BrokenPipeError", "Traceback")
 
+#: The `airlock` package the child must run: this checkout's, at `src/airlock`.
+SRC_DIR = Path(__file__).resolve().parents[2] / "src"
+
+
+def child_env(**extra: str) -> dict[str, str]:
+    """The parent environment with this checkout's `src` ahead of any installed airlock.
+
+    `python -m airlock` searches site-packages before the working directory, so a machine with
+    `pip install -e .` or `pip install .` pointed at another copy would have these tests probe that
+    copy and report a green run for code the repository does not contain.
+    """
+    env = dict(os.environ)
+    existing = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = str(SRC_DIR) if existing is None else f"{SRC_DIR}{os.pathsep}{existing}"
+    env.update(extra)
+    return env
+
 
 def git(root: Path, *args: str) -> None:
     subprocess.run(
@@ -91,7 +108,7 @@ def run_with_closed_stdout(
     read_end, write_end = os.pipe()
     os.close(read_end)
     stderr_path = tmp_path / "stderr.txt"
-    env = dict(os.environ)
+    env = child_env()
     if unbuffered:
         env["PYTHONUNBUFFERED"] = "1"
     if summary is not None:
@@ -211,6 +228,7 @@ class TestOtherDestinationsUnaffected:
             text=True,
             check=False,
             cwd=str(dirty),
+            env=child_env(),
         )
 
         assert child.returncode == EXIT_FINDINGS, child.stderr
