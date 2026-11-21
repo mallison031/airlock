@@ -60,6 +60,7 @@ STATE_RULE_IDS = frozenset(
         "suppression-expiring",
         "suppression-invalid",
         "untrusted-policy-source",
+        "content-magic-role",
     }
 )
 
@@ -365,6 +366,12 @@ class FileEntry:
     carried: the collector needs it to decide whether a file is oversize or only partly read, and
     it says so in those findings, but no rule is a function of it. `len(text)` is the size of any
     file whose text is here.
+
+    Three states, and they are mutually exclusive: read (`sha256` and `text`), hashed but not
+    decoded (`sha256` only) and skipped (`skip_reason` only). A skipped entry carrying text would
+    let a detector scan bytes the report says were never read, which is the inversion skip
+    findings exist to prevent, so the combinations are rejected here instead of trusted to the
+    collector.
     """
 
     path: str
@@ -377,6 +384,22 @@ class FileEntry:
         require_repo_path(self.path, "path")
         if self.sha256 is not None and not _HEX64_RE.match(self.sha256):
             raise ValueError("file sha256 must be 64 hex digits")
+        if self.text is not None and self.skip_reason is not None:
+            raise ValueError(
+                f"{self.path}: a skipped entry (skip_reason {self.skip_reason!r}) cannot carry text"
+            )
+        if self.text is not None and self.sha256 is None:
+            raise ValueError(f"{self.path}: text requires a sha256 digest")
+        if self.skip_reason is not None and self.sha256 is not None:
+            raise ValueError(
+                f"{self.path}: a skipped entry (skip_reason {self.skip_reason!r}) cannot carry "
+                "a sha256 digest"
+            )
+        if self.skip_reason is None and self.sha256 is None:
+            raise ValueError(
+                f"{self.path}: an entry with neither text, a sha256 digest nor a skip_reason "
+                "would be invisible to the report"
+            )
 
 
 @dataclass(frozen=True, slots=True)

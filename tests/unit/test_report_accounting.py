@@ -156,8 +156,14 @@ class TestTheInvariant:
     ) -> None:
         write_text(repo, "notes.txt", "an ordinary file\n")
         commit(repo)
+        lost_entry = object.__new__(FileEntry)
+        object.__setattr__(lost_entry, "path", "lost.txt")
+        object.__setattr__(lost_entry, "sha256", None)
+        object.__setattr__(lost_entry, "roles", ())
+        object.__setattr__(lost_entry, "text", None)
+        object.__setattr__(lost_entry, "skip_reason", None)
         lost = Collection(
-            entries=(FileEntry(path="lost.txt", sha256=None, roles=()),),
+            entries=(lost_entry,),
             pending=(),
         )
         monkeypatch.setattr(cli, "collect", lambda *_args, **_kwargs: lost)

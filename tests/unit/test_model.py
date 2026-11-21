@@ -327,7 +327,7 @@ class TestContextAndReport:
     def test_file_entry_may_still_record_a_skip(self) -> None:
         entry = FileEntry(
             path="big.js",
-            sha256=DIGEST,
+            sha256=None,
             roles=("source",),
             text=None,
             skip_reason="skipped-oversize",

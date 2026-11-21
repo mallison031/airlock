@@ -59,7 +59,7 @@ from .policy import (
     resolve_policy,
     suppress,
 )
-from .report import console, github, jsonout, summary
+from .report import console, github, jsonout, sarif, summary
 from .roles import known_roles
 from .rules import load_role_globs, load_rules
 
@@ -100,6 +100,7 @@ RENDERERS: Mapping[str, Callable[[ScanReport], str]] = {
     "console": console.render,
     "github": github.render,
     "json": jsonout.render,
+    "sarif": sarif.render,
 }
 
 STEP_SUMMARY_ENV = "GITHUB_STEP_SUMMARY"
@@ -395,7 +396,9 @@ def _write_step_summary(report: ScanReport) -> None:
         with open(target, "a", encoding="utf-8") as handle:
             handle.write(summary.render(report))
     except OSError as exc:
-        raise UsageError(f"cannot write the step summary to {target}: {exc}") from exc
+        print(
+            f"airlock: warning: cannot write the step summary to {target}: {exc}", file=sys.stderr
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
